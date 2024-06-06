@@ -99,6 +99,7 @@ def main():
     data_folder = os.path.join(app_path, '../data')
 
     try:
+        
         # Load secrets
         secrets = load_secrets()
         

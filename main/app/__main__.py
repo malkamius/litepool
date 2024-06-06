@@ -19,12 +19,12 @@ def main():
     data_folder = os.path.join(app_path, "..\\data")
     if not os.path.exists(data_folder):
         os.makedirs(data_folder)
-
+    
     # Start the Flask app in a separate thread
     flask_app_thread = threading.Thread(target=run_webserver)
     flask_app_thread.daemon = True
     flask_app_thread.start()
-
+    
     def signal_handler(sig, frame):
         print('Exiting main script...')
         shutdown_flask_app()

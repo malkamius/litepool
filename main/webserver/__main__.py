@@ -1,4 +1,4 @@
-from __init__ import run
+from .__init__ import run
     
 
 if __name__ == "__main__":

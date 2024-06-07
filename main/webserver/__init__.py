@@ -14,11 +14,13 @@ def run():
     logger = logging.get_logger(loglevel=baselogging.DEBUG, loggername=__name__)
 
     # Define the data and secrets folder paths
-    data_folder = '../data'
-    secrets_folder = '../secrets'
+    app_path = os.path.dirname(os.path.abspath(__file__))
+    data_folder = os.path.join(app_path, '..', 'data')
+    secrets_folder = os.path.join(app_path, '..', 'secrets')
+    
     secrets_file = os.path.join(secrets_folder, 'secrets.json')
 
-    home_page = HomePage.as_view("Home", "index.html")
+    home_page = HomePage.as_view("Home", "index.html", data_folder=data_folder)
 
     routes = {
         '/': {'handler': home_page, 'methods': ['GET']},

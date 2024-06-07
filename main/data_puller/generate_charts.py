@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
+import re
 from PIL import Image, ImageDraw, ImageFont
 
 # Define the data folder path
@@ -15,13 +16,18 @@ charts_folder = os.path.join(app_path, '../webserver/static/')
 def parse_json_files(data_folder):
     json_files = [f for f in os.listdir(data_folder) if f.endswith('.json')]
     data = []
+    datetime_pattern = re.compile(r'^\d{4}-\d{2}-\d{2}_\d{2}\.\d{2}\.\d{2}\.json$')
 
     for file in json_files:
-        with open(os.path.join(data_folder, file), 'r') as f:
-            json_data = json.load(f)
-            json_data['filename'] = file  # Add filename to json data
-            data.append(json_data)
-
+        if datetime_pattern.match(file):
+            try:
+                file_datetime = datetime.strptime(file, '%Y-%m-%d_%H.%M.%S.json')
+                with open(os.path.join(data_folder, file), 'r') as f:
+                    json_data = json.load(f)
+                    json_data['filename'] = file  # Add filename to json data
+                    data.append(json_data)
+            except ValueError:
+                continue  # Skip files that do not match the date-time format
     return data
 
 # Function to process data

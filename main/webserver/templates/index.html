@@ -4,6 +4,7 @@
 
 {% block content %}
 <h1>Welcome to the Home Page</h1>
+
 <div class="row">
     <div class="col-md-4">
         <img src="{{ url_for('static', filename='hashrate_stats_line_graph.png') }}" class="chart-image" />
@@ -14,5 +15,27 @@
     <div class="col-md-4">
         <img src="{{ url_for('static', filename='workers_connected_bar_chart.png') }}" class="chart-image" />
     </div>
+</div>
+
+<h2>Worker Status</h2>
+<div class="container">
+    <div class="row font-weight-bold">
+        <div class="col-md-4">Worker Name</div>
+        <div class="col-md-4">Connected</div>
+        <div class="col-md-4">Disconnected Since</div>
+    </div>
+    {% for worker, details in summary_data.items() %}
+    <div class="row">
+        <div class="col-md-4">{{ worker }}</div>
+        <div class="col-md-4">
+            {% if details['connected'] %}
+            <div class="p-2 bg-success text-white text-center">Yes</div>
+            {% else %}
+            <div class="p-2 bg-danger text-white text-center">No</div>
+            {% endif %}
+        </div>
+        <div class="col-md-4">{{ details['disconnected_since'] if not details['connected'] else 'N/A' }}</div>
+    </div>
+    {% endfor %}
 </div>
 {% endblock %}

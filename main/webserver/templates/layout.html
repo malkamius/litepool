@@ -56,14 +56,23 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2024 - LitecoinInfo
+            &copy; 2024 - LitecoinInfo | Last updated: <span id="last-updated"></span>
         </div>
     </footer>
 
     <script src="{{ url_for('static', filename='lib/jquery/dist/jquery.min.js') }}"></script>
     <script src="{{ url_for('static', filename='lib/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/site.js') }}" asp-append-version="true"></script>
+    <script type="text/javascript">
+        function updateLastUpdatedTime() {
+            var now = new Date();
+            var formattedTime = now.toLocaleString();
+            document.getElementById('last-updated').textContent = formattedTime;
+        }
 
+        // Call the function to set the initial time
+        updateLastUpdatedTime();
+    </script>
 	{% block scripts %}
 	{% endblock %}
 </body>

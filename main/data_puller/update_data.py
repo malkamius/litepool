@@ -148,7 +148,7 @@ def main():
     logger = logging.get_logger(loglevel=baselogging.DEBUG, loggername=__name__)
     
     app_path = os.path.dirname(os.path.abspath(__file__))
-    data_folder = os.path.join(app_path, '../data')
+    data_folder = os.path.join(app_path, '..', 'data')
 
     try:
         secrets = load_secrets()

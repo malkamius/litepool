@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 app_path = os.path.dirname(os.path.abspath(__file__))
 
 data_folder = os.path.join(app_path, '..', 'data')
-charts_folder = os.path.join(app_path, '..', 'webserver/static/')
+charts_folder = os.path.join(app_path, '..', 'webserver', 'static')
 
 # Function to parse JSON files
 def parse_json_files(data_folder):

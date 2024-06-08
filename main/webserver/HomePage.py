@@ -3,6 +3,7 @@ from flask.views import View
 import os
 import json
 from shared import load_secrets
+
 class HomePage(View):
     def __init__(self, template, data_folder):
         self.template = template

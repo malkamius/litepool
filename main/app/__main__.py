@@ -9,12 +9,6 @@ import logging as baselogging
 from data_puller import run as run_data_puller
 from webserver import run as run_webserver
 
-def shutdown_flask_app():
-    try:
-        requests.post('http://127.0.0.1:3000/shutdown')
-    except requests.exceptions.RequestException as e:
-        print(f"Error shutting down Flask server: {e}")
-
 def main():
     logger = logging.get_logger(loglevel=baselogging.DEBUG, loggername=__name__)
     try:
@@ -29,8 +23,6 @@ def main():
         flask_app_thread.start()
         
         def signal_handler(sig, frame):
-            print('Exiting main script...')
-            shutdown_flask_app()
             sys.exit(0)
 
         run_data_puller()

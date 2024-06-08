@@ -10,25 +10,7 @@ from .generate_charts import parse_data_generate_charts
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
-# Function to load secrets from the secrets.json file
-def load_secrets():
-    app_path = os.path.dirname(os.path.abspath(__file__))
-    
-    secrets_file = os.path.join(app_path, '..', 'secrets', 'secrets.json')
-    
-    live_secrets_file = os.path.join(app_path, '..', "live_secrets", 'secrets.json')
-    
-    if os.path.exists(live_secrets_file):
-        with open(live_secrets_file, 'r') as f:
-            secrets = json.load(f)
-        return secrets
-    elif os.path.exists(secrets_file):
-        with open(secrets_file, 'r') as f:
-            secrets = json.load(f)
-        return secrets
-    else:
-        raise FileNotFoundError(f"Secrets file not found at {secrets_file}")
+from shared import load_secrets
 
 # Function to send email notifications
 def send_email(subject, plain_body, html_body):

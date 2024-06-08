@@ -24,7 +24,7 @@ def run():
     
     secrets_file = os.path.join(secrets_folder, 'secrets.json')
     secrets = load_secrets()
-    home_page = HomePage.as_view("Home", "index.html", data_folder=data_folder)
+    home_page = HomePage.as_view("Home", "index.html", data_folder=data_folder, app=app)
 
     routes = {
         '/': {'handler': home_page, 'methods': ['GET']},

@@ -1,19 +1,58 @@
 {% extends "layout.html" %}
 
 {% block title %}Home{% endblock %}
-
+{% block styles %}
+<style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .image-container {
+            display: inline-block;
+            margin: 10px;
+        }
+        .zoom-frame {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .zoom-frame img {
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0 0 10px #fff;
+        }
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            color: #fff;
+            cursor: pointer;
+            z-index: 1001;
+        }
+    </style>
+{% endblock %}
 {% block content %}
 <h1>Welcome to the Home Page</h1>
-
+<div class="zoom-frame" id="zoomFrame">
+    <div class="close-btn" onclick="closeZoomFrame()">×</div>
+    <img id="zoomImage" src="" alt="Zoomed Image">
+</div>
 <div class="row">
     <div class="col-md-4">
-        <img src="{{ url_for('static', filename='hashrate_stats_line_graph.png') }}" class="chart-image" />
+        <img src="{{ url_for('static', filename='hashrate_stats_line_graph.png') }}" class="chart-image" onclick="openZoomFrame(this.src)" />
     </div>
     <div class="col-md-4">
-        <img src="{{ url_for('static', filename='worker_uptime_pie_chart.png') }}" class="chart-image" />
+        <img src="{{ url_for('static', filename='worker_uptime_pie_chart.png') }}" class="chart-image" onclick="openZoomFrame(this.src)" />
     </div>
     <div class="col-md-4">
-        <img src="{{ url_for('static', filename='workers_connected_bar_chart.png') }}" class="chart-image" />
+        <img src="{{ url_for('static', filename='workers_connected_bar_chart.png') }}" class="chart-image" onclick="openZoomFrame(this.src)" />
     </div>
 </div>
 
@@ -38,4 +77,26 @@
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function openZoomFrame(src) {
+        document.getElementById('zoomImage').src = src;
+        document.getElementById('zoomFrame').style.display = 'flex';
+    }
+
+    function closeZoomFrame() {
+        document.getElementById('zoomFrame').style.display = 'none';
+    }
+
+    window.onresize = function() {
+        var zoomFrame = document.getElementById('zoomFrame');
+        if (zoomFrame.style.display === 'flex') {
+            // Ensure the image resizes with the window
+            var zoomImage = document.getElementById('zoomImage');
+            zoomImage.style.maxWidth = '90%';
+            zoomImage.style.maxHeight = '90%';
+        }
+    }
+</script>
 {% endblock %}

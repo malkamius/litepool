@@ -14,10 +14,11 @@ from email.mime.multipart import MIMEMultipart
 # Function to load secrets from the secrets.json file
 def load_secrets():
     app_path = os.path.dirname(os.path.abspath(__file__))
-    secrets_folder = os.path.join(app_path, '../secrets')
-    secrets_file = os.path.join(secrets_folder, 'secrets.json')
-    live_secrets_folder = os.path.join(app_path, '../live_secrets')
-    live_secrets_file = os.path.join(live_secrets_folder, 'secrets.json')
+    
+    secrets_file = os.path.join(app_path, '..', 'secrets', 'secrets.json')
+    
+    live_secrets_file = os.path.join(app_path, '..', "live_secrets", 'secrets.json')
+    
     if os.path.exists(live_secrets_file):
         with open(live_secrets_file, 'r') as f:
             secrets = json.load(f)
@@ -30,28 +31,45 @@ def load_secrets():
         raise FileNotFoundError(f"Secrets file not found at {secrets_file}")
 
 # Function to send email notifications
-def send_email(subject, plain_body, html_body, to_emails):
+def send_email(subject, plain_body, html_body):
     secrets = load_secrets()
     smtp_server = secrets['smtp-server']
     smtp_port = secrets['smtp-port']
     smtp_user = secrets['smtp-user']
     smtp_password = secrets['smtp-password']
-    if smtp_server:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = smtp_user
-        msg['To'] = ", ".join(to_emails)
+    smtp_use_ssl = secrets['smtp-use-ssl']
+    smtp_use_tls = secrets['smtp-use-tls']
+    to_emails = secrets["email_notifications"]
 
-        part1 = MIMEText(plain_body, 'plain')
-        part2 = MIMEText(html_body, 'html')
+    if not isinstance(to_emails, list) or not to_emails:
+        print("No valid email addresses found to send emails to.")
+        return
+    
+    try:
+        if smtp_server and smtp_port and smtp_user and smtp_password and to_emails:
+            with (smtplib.SMTP_SSL(smtp_server, smtp_port) if smtp_use_ssl else smtplib.SMTP(smtp_server, smtp_port)) as server:
+                server.login(smtp_user, smtp_password)
+                
+                if not smtp_use_ssl and smtp_use_tls:
+                    server.starttls()
 
-        msg.attach(part1)
-        msg.attach(part2)
-
-        with smtplib.SMTP(smtp_server, smtp_port) as server:
-            #server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(smtp_user, to_emails, msg.as_string())
+                for email in to_emails:
+                    msg = MIMEText(plain_body, 'plain')
+                    msg['Subject'] = subject
+                    msg['From'] = smtp_user
+                    msg['To'] = email
+                    msg['Reply-To'] = smtp_user
+                    msg['X-Mailer'] = 'Python smtplib'
+                    try:
+                        server.sendmail(smtp_user, email, msg.as_string())
+                    except smtplib.SMTPDataError as e:
+                        print(f"Failed to send email to {email}: {e}")
+                    except smtplib.SMTPRecipientsRefused as e:
+                        print(f"Recipient refused for {email}: {e}")
+                    except smtplib.SMTPException as e:
+                        print(f"SMTP error occurred for {email}: {e}")
+    except smtplib.SMTPException as e:
+        print(f"SMTP error occurred: {e}")
 
 # Function to check the most recent file and its timestamp
 def get_most_recent_file(data_folder):
@@ -67,7 +85,7 @@ def get_most_recent_file(data_folder):
     return None, None
 
 # Function to call the API and save the JSON output
-def call_api_and_save(logger, data_folder, api_endpoint, api_key, email_notifications):
+def call_api_and_save(logger, data_folder, api_endpoint, api_key):
     request_url = f'{api_endpoint}{api_key}'
     response = requests.get(request_url)
     if response.status_code == 200:
@@ -77,7 +95,7 @@ def call_api_and_save(logger, data_folder, api_endpoint, api_key, email_notifica
         with open(filepath, 'w') as f:
             json.dump(data, f)
         logger.info(f'Saved JSON data to {filepath}')
-        process_workers(data, logger, data_folder, email_notifications)
+        process_workers(data, logger, data_folder)
         return data
     else:
         logger.error(f'Failed to retrieve data from the API, status code: {response.status_code}')
@@ -110,7 +128,7 @@ def delete_old_files(logger, data_folder):
             os.remove(os.path.join(data_folder, file))
             logger.info(f"Deleted old file: {file}")
 
-def process_workers(data, logger, data_folder, email_notifications):
+def process_workers(data, logger, data_folder):
     summary_file = os.path.join(data_folder, 'workers_summary.json')
     
     if os.path.exists(summary_file):
@@ -137,7 +155,7 @@ def process_workers(data, logger, data_folder, email_notifications):
                 </body>
                 </html>
                 """
-                send_email(subject, plain_body, html_body, email_notifications)
+                send_email(subject, plain_body, html_body)
         else:
             summary_data[worker]['disconnected_since'] = None
 
@@ -155,7 +173,6 @@ def main():
         
         api_endpoint = secrets.get('api-endpoint')
         api_key = secrets.get('api-key')
-        email_notifications = secrets.get('email-notifications')
 
         if api_key and api_endpoint:
             logger.info("Got API Key from secrets.json")
@@ -163,7 +180,7 @@ def main():
                 most_recent_file, most_recent_datetime = get_most_recent_file(data_folder)
                 if most_recent_datetime is None or datetime.now() - most_recent_datetime > timedelta(minutes=1):
                     logger.info("API Data out of date, retrieving updated JSON")
-                    call_api_and_save(logger, data_folder, api_endpoint, api_key, email_notifications)
+                    call_api_and_save(logger, data_folder, api_endpoint, api_key)
                     delete_old_files(logger, data_folder)
                     parse_data_generate_charts()
                 else:

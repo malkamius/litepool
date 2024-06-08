@@ -3,3 +3,5 @@ flask
 matplotlib
 pandas
 pillow
+waitress
+gunicorn

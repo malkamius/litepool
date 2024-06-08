@@ -39,7 +39,7 @@ def send_email(subject, plain_body, html_body):
     smtp_password = secrets['smtp-password']
     smtp_use_ssl = secrets['smtp-use-ssl']
     smtp_use_tls = secrets['smtp-use-tls']
-    to_emails = secrets["email_notifications"]
+    to_emails = secrets["email-notifications"]
 
     if not isinstance(to_emails, list) or not to_emails:
         print("No valid email addresses found to send emails to.")

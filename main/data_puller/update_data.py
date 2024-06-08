@@ -139,7 +139,7 @@ def process_workers(data, logger, data_folder):
                 send_email(subject, plain_body, html_body)
         else:
             summary_data[worker]['disconnected_since'] = None
-
+        summary_data[worker]["connected"] = details["connected"]
     with open(summary_file, 'w') as f:
         json.dump(summary_data, f)
 

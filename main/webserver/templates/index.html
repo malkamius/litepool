@@ -59,21 +59,29 @@
 <h2>Worker Status</h2>
 <div class="container">
     <div class="row font-weight-bold">
-        <div class="col-md-4">Worker Name</div>
-        <div class="col-md-4">Connected</div>
-        <div class="col-md-4">Disconnected Since</div>
+        <div class="col-md-3">Worker Name</div>
+        <div class="col-md-3">Connected</div>
+		<div class="col-md-3">Hash Rate</div>
+        <div class="col-md-3">Disconnected Since</div>
     </div>
     {% for worker, details in summary_data.items() %}
     <div class="row">
-        <div class="col-md-4">{{ worker }}</div>
-        <div class="col-md-4">
+        <div class="col-md-3">{{ worker }}</div>
+        <div class="col-md-3">
             {% if details['connected'] %}
             <div class="p-2 bg-success text-white text-center">Yes</div>
             {% else %}
             <div class="p-2 bg-danger text-white text-center">No</div>
             {% endif %}
         </div>
-        <div class="col-md-4">{{ details['disconnected_since'] if not details['connected'] else 'N/A' }}</div>
+		<div class="col-md-3">
+            {% if details['hash_rate'] and details['hash_rate'] > 0 %}
+            <div class="p-2 bg-success text-white text-center">{{ details['hash_rate'] }}</div>
+            {% else %}
+            <div class="p-2 bg-danger text-white text-center">{{ details['hash_rate'] }}</div>
+            {% endif %}
+        </div>
+        <div class="col-md-3">{{ details['disconnected_since'] if not details['connected'] else 'N/A' }}</div>
     </div>
     {% endfor %}
 </div>

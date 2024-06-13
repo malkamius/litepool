@@ -122,7 +122,7 @@ def process_workers(data, logger, data_folder):
     for worker, details in workers.items():
         if worker not in summary_data:
             summary_data[worker] = {'connected': details['connected'], 'hash_rate': details['hash_rate'], 'disconnected_since': None}
-        
+        summary_data[worker]['hash_rate'] = details['hash_rate']
         if not details['connected']:
             if summary_data[worker]['disconnected_since'] is None:
                 summary_data[worker]['disconnected_since'] = datetime.now().isoformat()

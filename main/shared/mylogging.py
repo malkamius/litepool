@@ -13,7 +13,7 @@ class StripAnsiFormatter(baselogging.Formatter):
         return strip_ansi_codes(original)
 
 class MyLogger(baselogging.Logger):
-    def __init__(self, name, level=baselogging.NOTSET):
+    def __init__(self, name, level=baselogging.DEBUG):
         super().__init__(name, level)
         self.setLevel(level)
 
@@ -38,7 +38,7 @@ class logging:
 
         if loggername in logging.loggers:
             return logging.loggers[loggername]
-
+            
         # Create a logger
         logger = MyLogger(loggername, loglevel)
 

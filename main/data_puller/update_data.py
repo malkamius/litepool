@@ -121,7 +121,7 @@ def process_workers(data, logger, data_folder):
     workers = data.get('workers', {})
     for worker, details in workers.items():
         if worker not in summary_data:
-            summary_data[worker] = {'connected': details['connected'], 'disconnected_since': None}
+            summary_data[worker] = {'connected': details['connected'], 'hash_rate': details['hash_rate'], 'disconnected_since': None}
         
         if not details['connected']:
             if summary_data[worker]['disconnected_since'] is None:
@@ -137,18 +137,81 @@ def process_workers(data, logger, data_folder):
                 </html>
                 """
                 send_email(subject, plain_body, html_body)
+        elif details['hash_rate'] == 0:
+            if summary_data[worker]['disconnected_since'] is None:
+                summary_data[worker]['disconnected_since'] = datetime.now().isoformat()
+                subject = f"Worker {worker} :: 0 Hash Rate"
+                plain_body = f"Worker {worker} has 0 hash rate at {summary_data[worker]['disconnected_since']}."
+                html_body = f"""
+                <html>
+                <body>
+                    <h2>Worker {worker} has 0 Hash Rate</h2>
+                    <p>Worker {worker} has 0 hash rate at {summary_data[worker]['disconnected_since']}.</p>
+                </body>
+                </html>
+                """
+                send_email(subject, plain_body, html_body)
         else:
             summary_data[worker]['disconnected_since'] = None
         summary_data[worker]["connected"] = details["connected"]
     with open(summary_file, 'w') as f:
         json.dump(summary_data, f)
+def _windows_enable_ANSI(std_id):
+    """Enable Windows 10 cmd.exe ANSI VT Virtual Terminal Processing."""
+    from ctypes import byref, POINTER, windll, WINFUNCTYPE
+    from ctypes.wintypes import BOOL, DWORD, HANDLE
 
+    GetStdHandle = WINFUNCTYPE(
+        HANDLE,
+        DWORD)(('GetStdHandle', windll.kernel32))
+
+    GetFileType = WINFUNCTYPE(
+        DWORD,
+        HANDLE)(('GetFileType', windll.kernel32))
+
+    GetConsoleMode = WINFUNCTYPE(
+        BOOL,
+        HANDLE,
+        POINTER(DWORD))(('GetConsoleMode', windll.kernel32))
+
+    SetConsoleMode = WINFUNCTYPE(
+        BOOL,
+        HANDLE,
+        DWORD)(('SetConsoleMode', windll.kernel32))
+
+    if std_id == 1:       # stdout
+        h = GetStdHandle(-11)
+    elif std_id == 2:     # stderr
+        h = GetStdHandle(-12)
+    else:
+        return False
+
+    if h is None or h == HANDLE(-1):
+        return False
+
+    FILE_TYPE_CHAR = 0x0002
+    if (GetFileType(h) & 3) != FILE_TYPE_CHAR:
+        return False
+
+    mode = DWORD()
+    if not GetConsoleMode(h, byref(mode)):
+        return False
+
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+    if (mode.value & ENABLE_VIRTUAL_TERMINAL_PROCESSING) == 0:
+        SetConsoleMode(h, mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+    return True
+    
 def main():
     logger = logging.get_logger(loglevel=baselogging.DEBUG, loggername=__name__)
     
     app_path = os.path.dirname(os.path.abspath(__file__))
     data_folder = os.path.join(app_path, '..', 'data')
-
+    try:
+        _windows_enable_ANSI(1)
+        _windows_enable_ANSI(2)
+    except Exception:
+        print("Failed to enable ANSI")
     try:
         secrets = load_secrets()
         
@@ -160,10 +223,13 @@ def main():
             while True:
                 most_recent_file, most_recent_datetime = get_most_recent_file(data_folder)
                 if most_recent_datetime is None or datetime.now() - most_recent_datetime > timedelta(minutes=1):
-                    logger.info("API Data out of date, retrieving updated JSON")
-                    call_api_and_save(logger, data_folder, api_endpoint, api_key)
-                    delete_old_files(logger, data_folder)
-                    parse_data_generate_charts()
+                    try:
+                        logger.info("API Data out of date, retrieving updated JSON")
+                        call_api_and_save(logger, data_folder, api_endpoint, api_key)
+                        delete_old_files(logger, data_folder)
+                        parse_data_generate_charts()
+                    except Exception as e:
+                        logger.error(f"Exception: {str(e)}")
                 else:
                     print('Most recent file is within the last minute, skipping API call')
                 time.sleep(60)
